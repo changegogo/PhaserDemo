@@ -1,0 +1,105 @@
+<!DOCTYPE html> 
+<head> 
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+	<title>exam</title>
+	<script src="phaser.min.js"></script>
+	<style>
+	  	* {
+	  		margin: 0;
+	  		padding: 0;
+	  	}
+	  	#container {
+	  		width: 414px;
+	  		height: 600px;
+	  		margin: 0 auto;
+	  	}
+	</style>
+</head>
+<body>
+	<div id="container"></div>
+<script>
+	var width = 414;
+	var height = 600;
+	var player;
+	var stars;
+	var cursors;
+	var posXs = [];
+	var scoreText;
+	var score = 0;
+	
+	var game = new Phaser.Game(width, height, Phaser.CANVAS, 'container', {
+		preload: preload, 
+		create: create, 
+		update: update },
+		true);
+	
+	function preload() {
+	  game.load.image('bg', 'assets/bg.png');
+	  game.load.image('star', 'assets/star.png');
+	  game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+	}
+	
+	
+	function create() {
+		// 开启屋里效果
+		game.physics.startSystem(Phaser.Physics.ARCADE);
+	  	game.add.sprite(0, 0, 'bg');
+	  	// 创建3个精灵
+	  	for(var i=0;i<3;i++){
+		  	var x = game.world.width*(1-(5-(i*2))/6)-32/2;
+		  	var y = game.world.height-48;
+		  	posXs.push(x);
+		  	//game.add.sprite(x, y, 'dude');
+		  	if(i===1){
+		  		player = game.add.sprite(x, y, 'dude');
+		  		player.frame = 4;
+		  	}
+	  	}
+	  	
+	  	game.physics.arcade.enable(player);
+		player.body.collideWorldBounds = true;
+	  	cursors = game.input.keyboard.createCursorKeys();
+	  	
+	  	// 创建星星
+	  	stars = game.add.group();
+		stars.enableBody = true;
+		var starCount = 12;
+		for (var i = 0; i < starCount; i++) {
+		   var star = stars.create(game.world.width/starCount*i, 0, 'star');
+		   star.body.gravity.y = 10+ Math.random()*50;
+		}
+		
+		scoreText = game.add.text(16, 16, '分数: 0', { fontSize: '32px', fill: '#000' });
+	}
+	
+	function update() {
+		game.physics.arcade.overlap(player, stars, collectStar, null, this);
+		// 是否正在触摸
+		var touching = false;
+		// 监听按下事件
+		game.input.onDown.add(function(pointer) {
+		     // 要判断是否点住主角，避免瞬移
+		     if(pointer.x>player.x-32 && pointer.x<player.x+player.width+32){
+		     	touching = true;
+		     }
+		});
+		// 监听离开事件
+		game.input.onUp.add(function() {
+		    touching = false;
+		});
+		// 监听滑动事件
+		game.input.addMoveCallback(function(pointer, x, y, isTap) {
+		    if (!isTap && touching) player.x = x;
+		});
+	}
+	
+	function collectStar (player, star) {
+		star.kill();
+		score += 10;
+  		scoreText.text = '分数: ' + score;
+	}
+
+</script>
+
+</body>
